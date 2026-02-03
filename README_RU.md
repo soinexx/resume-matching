@@ -242,12 +242,6 @@ curl -X POST http://localhost:8000/api/matching/compare \
   }'
 ```
 
-## Документация
-
-- [Руководство по установке](SETUP.md) — подробные инструкции
-- [Настройка базы данных](backend/DATABASE_SETUP.md) — конфигурация БД
-- [Реализация подбора](backend/MATCHING_IMPLEMENTATION.md) — детали matching
-- [ML Pipeline](ML_PIPELINE.md) — как работает ML/NLP обработка
 
 ## Решение проблем
 
@@ -270,10 +264,3 @@ docker compose down -v
 bash setup.sh
 ```
 
-## Лицензия
-
-MIT
-
----
-
-Создано для TEAM7
