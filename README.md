@@ -19,20 +19,20 @@ Choose your operating system:
 ### macOS / Linux
 
 ```bash
-git clone https://github.com/FraudMasters/Team7.git
-cd Team7
+git clone https://github.com/soinexx/resume-matching.git
+cd resume-matching
 bash setup.sh
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/FraudMasters/Team7.git
-cd Team7
+git clone https://github.com/soinexx/resume-matching.git
+cd resume-matching
 .\setup.ps1
 ```
 
-Then open http://localhost:3000
+Then open http://localhost:5173
 
 ### Load Test Data (Optional)
 
@@ -56,10 +56,10 @@ This uploads 65 sample resumes and 5 job vacancies.
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| Frontend | http://localhost:3000 | React UI |
+| Frontend | http://localhost:5173 | React UI |
 | Backend API | http://localhost:8000 | FastAPI backend |
 | API Docs | http://localhost:8000/docs | Interactive documentation |
-| Analytics | http://localhost:3000/recruiter/analytics | Hiring metrics dashboard |
+| Analytics | http://localhost:5173/recruiter/analytics | Hiring metrics dashboard |
 | Flower | http://localhost:5555 | Celery monitoring |
 
 ## Architecture

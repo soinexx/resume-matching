@@ -18,16 +18,16 @@
 ### macOS / Linux
 
 ```bash
-git clone https://github.com/FraudMasters/Team7.git
-cd Team7
+git clone https://github.com/soinexx/resume-matching.git
+cd resume-matching
 bash setup.sh
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/FraudMasters/Team7.git
-cd Team7
+git clone https://github.com/soinexx/resume-matching.git
+cd resume-matching
 .\setup.ps1
 ```
 
@@ -264,3 +264,10 @@ docker compose down -v
 bash setup.sh
 ```
 
+## Лицензия
+
+MIT
+
+---
+
+Создано TEAM7
