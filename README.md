@@ -9,7 +9,7 @@ AI-powered resume analysis system with intelligent job matching, multi-language 
 - **AI-Powered Insights**: Semantic understanding with sentence-transformers
 - **Multi-language**: English and Russian support
 - **Analytics Dashboard**: Hiring funnels, skill demand, recruiter performance, model quality metrics
-- **Async Processing**: Celery + Redis for background tasks
+- **Async Processing**: FastAPI async/await for concurrent requests
 - **Modern UI**: React 18 + Material-UI with responsive design
 
 ## Quick Start
@@ -59,8 +59,7 @@ This uploads 65 sample resumes and 5 job vacancies.
 | Frontend | http://localhost:5173 | React UI |
 | Backend API | http://localhost:8000 | FastAPI backend |
 | API Docs | http://localhost:8000/docs | Interactive documentation |
-| Analytics | http://localhost:5173/recruiter/analytics | Hiring metrics dashboard |
-| Flower | http://localhost:5555 | Celery monitoring |
+| Analytics | http://localhost:5173/analytics | Hiring metrics dashboard |
 
 ## Architecture
 
@@ -68,14 +67,16 @@ This uploads 65 sample resumes and 5 job vacancies.
 ┌─────────────┐      ┌──────────────┐      ┌─────────────┐
 │  Frontend   │─────▶│   Backend    │─────▶│   Database  │
 │ (React+MUI) │      │   (FastAPI)  │      │ (PostgreSQL)│
-└─────────────┘      └──────────────┘      └─────────────┘
+│             │◀─────│  (async/     │◀─────│  (SQLAlchemy)│
+└─────────────┘      │   await)     │      └─────────────┘
+                     └──────────────┘
                             │
-                    ┌───────┴────────┐
-                    ▼                ▼
-              ┌─────────┐      ┌──────────┐
-              │ Celery  │      │  Redis   │
-              │ Worker  │      │  Broker  │
-              └─────────┘      └──────────┘
+                    ┌───────┴──────────────┐
+                    ▼                       ▼
+              ┌─────────────┐       ┌──────────────┐
+              │   ML/NLP    │       │ File System  │
+              │  Analyzers  │       │  (PDF/DOCX)  │
+              └─────────────┘       └──────────────┘
 ```
 
 ## How It Works
@@ -141,7 +142,7 @@ This uploads 65 sample resumes and 5 job vacancies.
 │        │                                                        │
 │        ▼                                                        │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │              1. KEYWORD MATCHING (50%)                   │   │
+│  │              1. KEYWORD MATCHING (80%)                   │   │
 │  │  • Direct match (python → Python)                       │   │
 │  │  • Synonym match (unix → Linux, bash)                   │   │
 │  │  • Fuzzy matching (ReactJS → React)                      │   │
@@ -149,14 +150,14 @@ This uploads 65 sample resumes and 5 job vacancies.
 │  └────────────────────┬────────────────────────────────────┘   │
 │                       │                                          │
 │  ┌────────────────────┴────────────────────────────────────┐   │
-│  │              2. TF-IDF MATCHING (30%)                    │   │
+│  │              2. TF-IDF MATCHING (15%)                    │   │
 │  │  • Term Frequency-Inverse Document Frequency            │   │
 │  │  • Ranks skills by importance in vacancy                │   │
-│  │  • Weighted scoring based on keyword relevance          │   │
+│  │  • Logarithmic smoothing to reduce rare word penalty    │   │
 │  └────────────────────┬────────────────────────────────────┘   │
 │                       │                                          │
 │  ┌────────────────────┴────────────────────────────────────┐   │
-│  │              3. VECTOR SEMANTIC (20%)                   │   │
+│  │              3. VECTOR SEMANTIC (5%)                    │   │
 │  │  • sentence-transformers (all-MiniLM-L6-v2)            │   │
 │  │  • Semantic similarity of resume vs vacancy            │   │
 │  │  • Cosine similarity: -1 to 1 (normalized to 0-1)      │   │
@@ -209,9 +210,9 @@ docker compose down -v
 ### Backend
 - **Framework**: FastAPI with Python 3.11+
 - **Database**: PostgreSQL 14 with SQLAlchemy 2.0
-- **ML/NLP**: KeyBERT, SpaCy, LanguageTool, sentence-transformers
-- **Matching**: TF-IDF (scikit-learn), Vector similarity (all-MiniLM-L6-v2)
-- **Async**: Celery + Redis
+- **ML/NLP**: Hugging Face transformers, sentence-transformers, scikit-learn
+- **Matching**: Keyword (synonyms+fuzzy), TF-IDF (log-smoothed), Vector similarity
+- **Async**: Native async/await (no Celery needed)
 
 ### Frontend
 - **Framework**: React 18 with TypeScript 5.6
@@ -230,8 +231,13 @@ docker compose down -v
 │   │   ├── unified_matcher.py     # Combined 3-method matcher
 │   │   └── hf_skill_extractor.py  # HuggingFace skill extraction
 │   ├── api/               # API endpoints
-│   ├── tasks/             # Celery tasks
+│   │   ├── matching.py    # Unified matching endpoint
+│   │   ├── resumes.py     # Resume upload & analysis
+│   │   └── vacancies.py   # Job vacancy management
 │   ├── models/            # SQLAlchemy models
+│   │   ├── resume.py      # Resume model
+│   │   ├── job_vacancy.py # Vacancy model
+│   │   └── match_result.py # Match results model
 │   └── alembic/           # Database migrations
 ├── frontend/              # React + Vite frontend
 │   ├── src/
@@ -240,12 +246,12 @@ docker compose down -v
 │   │   │   └── UnifiedMatchMetrics.tsx  # Unified metrics display
 │   │   ├── pages/         # Page components
 │   │   └── i18n/          # Translations (EN/RU)
-│   └── nginx.conf         # nginx config for production
-├── scripts/               # Setup and utility scripts
-│   ├── reset_and_reload.py    # Database reset script
-│   └── load_test_data.sh       # Test data loader
+│   └── package.json
 ├── services/              # Shared services
-│   └── data_extractor/    # PDF/DOCX extraction
+│   └── data_extractor/    # PDF/DOCX text extraction
+├── scripts/               # Setup and utility scripts
+│   ├── recalculate_experience.py  # Experience recalculation
+│   └── reset_and_reload.py       # Database reset script
 ├── docker-compose.yml     # Docker services
 ├── setup.sh               # Setup script (Mac/Linux)
 ├── setup.ps1              # Setup script (Windows)
