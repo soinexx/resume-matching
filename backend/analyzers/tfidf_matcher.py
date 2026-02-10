@@ -58,8 +58,9 @@ class TfidfSkillMatcher:
         self,
         threshold: float = 0.3,
         max_features: int = 100,
-        tfidf_cutoff: float = 0.05,
+        tfidf_cutoff: float = 0.1,  # Увеличено с 0.05 для фильтрации очень редких слов
         max_missing_display: int = 10,
+        use_log_weights: bool = True,  # Использовать логарифмическое сглаживание весов
     ):
         """
         Инициализировать сопоставитель навыков TF-IDF.
@@ -67,13 +68,15 @@ class TfidfSkillMatcher:
         Args:
             threshold: Минимальная оценка для прохождения (0.0-1.0)
             max_features: Максимальное количество признаков TF-IDF
-            tfidf_cutoff: Минимальная оценка TF-IDF для значимого ключевого слова
+            tfidf_cutoff: Минимальная оценка TF-IDF для значимого ключевого слова (по умолчанию: 0.1)
             max_missing_display: Максимальное количество отсутствующих ключевых слов для возврата
+            use_log_weights: Использовать логарифмическое сглаживание для уменьшения влияния редких слов
         """
         self.threshold = threshold
         self.max_features = max_features
         self.tfidf_cutoff = tfidf_cutoff
         self.max_missing_display = max_missing_display
+        self.use_log_weights = use_log_weights
 
     def _create_vectorizer(self) -> TfidfVectorizer:
         """
@@ -212,9 +215,19 @@ class TfidfSkillMatcher:
         # Найти совпадения
         matched, missing = self._find_keyword_matches(resume_lower, keywords)
 
-        # Рассчитать взвешенную оценку
-        matched_weight = sum(tfidf_scores.get(kw, 0.1) for kw in matched)
-        total_weight = sum(tfidf_scores.get(kw, 0.1) for kw in keywords)
+        # Рассчитать взвешенную оценку с логарифмическим сглаживанием
+        # Логарифм уменьшает влияние редких слов с экстремально высоким TF-IDF score
+        import math
+
+        def smooth_weight(weight: float) -> float:
+            """Сгладить вес, используя логарифм для уменьшения влияния редких слов."""
+            if self.use_log_weights:
+                # log(1 + weight*10) сглаживает веса от 0 до ~3
+                return math.log(1 + weight * 10)
+            return weight
+
+        matched_weight = sum(smooth_weight(tfidf_scores.get(kw, 0.05)) for kw in matched)
+        total_weight = sum(smooth_weight(tfidf_scores.get(kw, 0.05)) for kw in keywords)
         score = matched_weight / total_weight if total_weight > 0 else 1.0
 
         # Сортировать отсутствующие по важности TF-IDF (сначала наиболее важные)
