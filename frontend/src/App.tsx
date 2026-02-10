@@ -26,49 +26,42 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Корневой маршрут с Layout */}
-        <Route path="/" element={<Layout />}>
-          {/* Главная страница по умолчанию */}
-          <Route index element={<HomePage />} />
+        {/* Устаревшие маршруты - сохранены для совместимости */}
+        <Route path="/upload" element={<Layout><UploadPage /></Layout>} />
+        <Route path="/results/:id" element={<Layout><ResultsPage /></Layout>} />
+        <Route path="/compare/:resumeId/:vacancyId" element={<Layout><ComparePage /></Layout>} />
+        <Route path="/compare-vacancy/:vacancyId" element={<Layout><CompareVacancyPage /></Layout>} />
 
-          {/* Устаревшие маршруты - сохранены для совместимости */}
-          <Route path="upload" element={<UploadPage />} />
-          <Route path="results/:id" element={<ResultsPage />} />
-          <Route path="compare/:resumeId/:vacancyId" element={<ComparePage />} />
-          <Route path="compare-vacancy/:vacancyId" element={<CompareVacancyPage />} />
+        {/* Маршруты модуля соискателя */}
+        <Route path="/jobs/:id" element={<Layout><VacancyDetailsPage /></Layout>} />
+        <Route path="/jobs" element={<Layout><VacancyListPage /></Layout>} />
+        <Route path="/jobs/upload" element={<Layout><UploadPage /></Layout>} />
+        <Route path="/jobs/results/:id" element={<Layout><ResultsPage /></Layout>} />
+        <Route path="/jobs/applications" element={<Layout><ApplicationsPage /></Layout>} />
 
-          {/* Маршруты модуля соискателя */}
-          <Route path="jobs">
-            <Route index element={<VacancyListPage />} />
-            <Route path="upload" element={<UploadPage />} />
-            <Route path="results/:id" element={<ResultsPage />} />
-            <Route path="applications" element={<ApplicationsPage />} />
-          </Route>
+        {/* Маршруты модуля рекрутера */}
+        <Route path="/recruiter" element={<Layout><RecruiterDashboardPage /></Layout>} />
+        <Route path="/recruiter/vacancies" element={<Layout><VacancyListPage /></Layout>} />
+        <Route path="/recruiter/vacancies/create" element={<Layout><CreateVacancyPage /></Layout>} />
+        <Route path="/recruiter/vacancies/:id" element={<Layout><VacancyDetailsPage /></Layout>} />
+        <Route path="/recruiter/vacancies/:id/edit" element={<Layout><CreateVacancyPage /></Layout>} />
+        <Route path="/recruiter/resumes" element={<Layout><ResumeDatabasePage /></Layout>} />
+        <Route path="/recruiter/search" element={<Layout><CandidateSearchPage /></Layout>} />
+        <Route path="/recruiter/analytics" element={<Layout><AnalyticsDashboardPage /></Layout>} />
 
-          {/* Маршруты модуля рекрутера */}
-          <Route path="recruiter">
-            <Route index element={<RecruiterDashboardPage />} />
-            <Route path="vacancies">
-              <Route index element={<VacancyListPage />} />
-              <Route path="create" element={<CreateVacancyPage />} />
-              <Route path=":id" element={<VacancyDetailsPage />} />
-            </Route>
-            <Route path="resumes" element={<ResumeDatabasePage />} />
-            <Route path="search" element={<CandidateSearchPage />} />
-            <Route path="analytics" element={<AnalyticsDashboardPage />} />
-          </Route>
+        {/* Отдельный маршрут для деталей вакансии (для прямого доступа) */}
+        <Route path="/vacancies/:id" element={<Layout><VacancyDetailsPage /></Layout>} />
 
-          {/* Страницы администратора */}
-          <Route path="admin" element={<Navigate to="/admin/synonyms" replace />} />
-          <Route path="admin/synonyms" element={<AdminSynonymsPage />} />
-          <Route path="admin/analytics" element={<AdminAnalyticsPage />} />
+        {/* Страницы администратора */}
+        <Route path="/admin" element={<Layout><Navigate to="/admin/synonyms" replace /></Layout>} />
+        <Route path="/admin/synonyms" element={<Layout><AdminSynonymsPage /></Layout>} />
+        <Route path="/admin/analytics" element={<Layout><AdminAnalyticsPage /></Layout>} />
 
-          {/* Панель аналитики */}
-          <Route path="analytics" element={<AnalyticsDashboardPage />} />
+        {/* Панель аналитики */}
+        <Route path="/analytics" element={<Layout><AnalyticsDashboardPage /></Layout>} />
 
-          {/* Перехватывающий маршрут - перенаправление на главную */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
+        {/* Главная страница - ДОЛЖНА БЫТЬ ПОСЛЕДНЕЙ! */}
+        <Route path="/" element={<Layout><HomePage /></Layout>} />
       </Routes>
     </BrowserRouter>
   );

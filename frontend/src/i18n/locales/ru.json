@@ -497,6 +497,31 @@
       "notSpecified": "Не указана"
     }
   },
+  "vacancyDetails": {
+    "backToVacancies": "Назад к вакансиям",
+    "editVacancy": "Редактировать",
+    "deleteVacancy": "Удалить",
+    "matchWithResume": "Сопоставить с резюме",
+    "description": "Описание",
+    "noDescription": "Описание не предоставлено",
+    "details": "Детали",
+    "requiredExperience": "Требуемый опыт",
+    "years": "лет",
+    "salary": "Зарплата",
+    "requiredSkills": "Требуемые навыки",
+    "matchDialog": {
+      "title": "Выберите резюме для сопоставления",
+      "searchPlaceholder": "Поиск резюме...",
+      "noResumes": "Нет доступных резюме",
+      "noResumesFound": "Резюме не найдены",
+      "uploaded": "Загружено",
+      "cancel": "Отмена"
+    },
+    "deleteConfirm": "Вы уверены, что хотите удалить эту вакансию?",
+    "notFound": "Вакансия не найдена",
+    "failedToLoad": "Не удалось загрузить вакансию",
+    "failedToDelete": "Не удалось удалить вакансию"
+  },
   "funnel": {
     "title": "Воронка найма",
     "pipelineOverview": "Обзор воронки кандидатов",

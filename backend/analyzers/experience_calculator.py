@@ -583,7 +583,110 @@ def format_experience_summary(
     return summary
 
 
-def extract_dates_from_text(text: str) -> List[str]:
+def extract_experience_section(text: str) -> str:
+    """
+    Извлечь только секцию Experience из текста резюме.
+
+    Эта функция находит секцию опыта работы и игнорирует образование,
+    чтобы избежать учёта периода обучения как рабочего опыта.
+
+    Args:
+        text: Полный текст резюме
+
+    Returns:
+        Текст только секции Experience или пустую строку, если секция не найдена
+
+    Examples:
+        >>> text = "Skills: Python, Java\\nExperience\\nWork at Company A\\nEducation\\nUniversity"
+        >>> result = extract_experience_section(text)
+        >>> "Experience" in result
+        True
+        >>> "Education" in result
+        False
+    """
+    if not text:
+        return ""
+
+    # Привести к нижнему регистру для поиска
+    text_lower = text.lower()
+
+    # Паттерны для начала секции опыта (искать как отдельные слова)
+    # Используем регулярные выражения для поиска заголовков секций
+    import re
+
+    # Заголовки секций опыта (как отдельные строки или с двоеточием)
+    experience_patterns = [
+        r'\nexperience\s*\n',           # "Experience" на отдельной строке
+        r'\nexperience:',                # "Experience:" с двоеточием
+        r'\nwork experience\s*\n',       # "Work Experience"
+        r'\nwork experience:',           # "Work Experience:"
+        r'\nwork history\s*\n',         # "Work History"
+        r'\nemployment\s*\n',           # "Employment"
+        r'\nprofessional experience\s*\n',  # "Professional Experience"
+        r'\nопыт работы\s*\n',          # "опыт работы" (на отдельной строке)
+        r'\nопыт:',                     # "опыт:"
+    ]
+
+    # Паттерны для окончания секции опыта (начало других секций)
+    section_end_patterns = [
+        r'\neducation\s*\n',            # "Education" на отдельной строке
+        r'\neducation:',                # "Education:"
+        r'\nобразование\s*\n',         # "образование"
+        r'\nskills\s*\n',              # "Skills"
+        r'\nнавыки\s*\n',              # "навыки"
+        r'\nlanguages\s*\n',           # "Languages"
+        r'\nязыки\s*\n',               # "языки"
+        r'\nprojects\s*\n',            # "Projects"
+        r'\nпроекты\s*\n',            # "проекты"
+        r'\ncertifications\s*\n',      # "Certifications"
+        r'\nсертификации\s*\n',       # "сертификации"
+        r'\nrecommendations\s*\n',     # "Recommendations"
+        r'\nрекомендации\s*\n',       # "рекомендации"
+    ]
+
+    # Найти начало секции Experience
+    experience_start = len(text)  # По умолчанию до конца
+    experience_match = None
+
+    for pattern in experience_patterns:
+        match = re.search(pattern, text_lower)
+        if match:
+            start_pos = match.start()
+            # Находим позицию в оригинальном тексте
+            if start_pos < experience_start:
+                experience_start = start_pos
+                experience_match = match
+
+    # Если секция Experience не найдена, вернуть весь текст
+    if experience_match is None:
+        logger.debug("No Experience section found, using full text")
+        # Проверить, есть ли вообще секции в резюме
+        has_sections = any(re.search(p, text_lower) for p in section_end_patterns)
+        if not has_sections:
+            return text
+        return ""
+
+    # Найти конец секции Experience (начало следующей секции)
+    experience_end = len(text)
+
+    # Ищем конец только ПОСЛЕ начала секции Experience
+    for pattern in section_end_patterns:
+        # Ищем совпадение после начала секции Experience
+        remaining_text = text_lower[experience_start:]
+        match = re.search(pattern, remaining_text)
+        if match:
+            end_pos = experience_start + match.start()
+            if end_pos < experience_end:
+                experience_end = end_pos
+
+    # Извлечь секцию Experience
+    experience_text = text[experience_start:experience_end].strip()
+
+    logger.debug(f"Extracted experience section: {len(experience_text)} characters")
+    return experience_text
+
+
+def extract_dates_from_text(text: str, experience_only: bool = True) -> List[str]:
     """
     Извлечь все даты из текста резюме с использованием регулярных выражений.
 
@@ -595,6 +698,7 @@ def extract_dates_from_text(text: str) -> List[str]:
 
     Args:
         text: Текст резюме для поиска дат
+        experience_only: Если True, извлекать даты только из секции Experience
 
     Returns:
         Список найденных строк дат
@@ -607,6 +711,13 @@ def extract_dates_from_text(text: str) -> List[str]:
     """
     if not text:
         return []
+
+    # Если нужно только из секции Experience, извлечь её
+    if experience_only:
+        text = extract_experience_section(text)
+        if not text:
+            logger.debug("No experience section found in resume")
+            return []
 
     # Месяцы на английском (краткие и полные)
     months_en = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)"
@@ -629,6 +740,26 @@ def extract_dates_from_text(text: str) -> List[str]:
     ]
 
     dates_found = []
+
+    # Сначала ищем даты без разделителей (формат ГГГГ-ГГГГ, например 2020-2021 без тире)
+    # В резюме это выглядит как 20202021 (8 цифр подряд)
+    date_ranges_without_separators = re.findall(r"\b(\d{4})(\d{4})\b", text)
+    logger.debug(f"Found {len(date_ranges_without_separators)} 8-digit date patterns")
+    for year1, year2 in date_ranges_without_separators:
+        # Проверяем, что вторая часть тоже валидный год (01-99)
+        try:
+            year2_int = int(year2)
+            if 0 <= year2_int <= 99:  # Суффикс года от 00 до 99
+                # Формируем два полных года
+                full_year1 = f"20{year1}" if len(year1) == 2 else year1
+                full_year2 = f"20{year2}" if len(year2) == 2 else year2
+                # Добавляем как январь (по умолчанию, так как месяц неизвестен)
+                dates_found.append(f"01 {full_year1}")  # Начало периода (январь первого года)
+                dates_found.append(f"01 {full_year2}")  # Начало периода (январь второго года)
+                logger.debug(f"Extracted years from {year1}-{year2}: 01/{full_year1} and 01/{full_year2}")
+        except ValueError as e:
+            logger.debug(f"ValueError parsing years: {e}")
+            pass
 
     for pattern in patterns:
         matches = re.findall(pattern, text, re.IGNORECASE)
@@ -731,8 +862,9 @@ def calculate_total_experience_from_text(
         }
 
     try:
-        # Извлечь даты из текста
-        date_strings = extract_dates_from_text(resume_text)
+        # Извлечь даты только из секции Experience
+        # Это исключает даты из секции Education
+        date_strings = extract_dates_from_text(resume_text, experience_only=True)
 
         if not date_strings:
             return {

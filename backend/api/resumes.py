@@ -389,6 +389,11 @@ async def get_resume(request: Request, resume_id: str, db: AsyncSession = Depend
         resume_result = await db.execute(resume_query)
         resume_record = resume_result.scalar_one_or_none()
 
+        # Initialize experience - try to read from database first
+        total_experience_months = 0
+        if resume_record and resume_record.total_experience_months:
+            total_experience_months = resume_record.total_experience_months
+
         # Determine file path
         file_path = None
         if resume_record and resume_record.file_path:
@@ -572,7 +577,7 @@ async def get_resume(request: Request, resume_id: str, db: AsyncSession = Depend
                 "grammar_errors": [],
                 "keywords": [],
                 "technical_skills": [],
-                "total_experience_months": total_experience_months,
+                "total_experience_months": 0,
                 "best_match": None,
             },
         )

@@ -30,7 +30,7 @@ interface LayoutProps {
   children?: ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = () => {
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { t } = useTranslation();
   const location = useLocation();
   const [jobSeekerAnchorEl, setJobSeekerAnchorEl] = useState<null | HTMLElement>(null);
@@ -176,11 +176,17 @@ const Layout: React.FC<LayoutProps> = () => {
       </AppBar>
 
       {/* Основная область контента */}
-      <Box sx={{ flexGrow: 1, py: 4 }}>
-        <Container maxWidth="lg">
-          <Outlet />
-        </Container>
-      </Box>
+      {children ? (
+        <Box sx={{ flexGrow: 1 }}>
+          {children}
+        </Box>
+      ) : (
+        <Box sx={{ flexGrow: 1, py: 4 }}>
+          <Container maxWidth="lg">
+            <Outlet />
+          </Container>
+        </Box>
+      )}
 
       {/* Футер */}
       <Box

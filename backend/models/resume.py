@@ -4,7 +4,7 @@
 import enum
 from typing import Optional
 
-from sqlalchemy import Enum, String, Text
+from sqlalchemy import Enum, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, TimestampMixin, UUIDMixin
@@ -45,6 +45,7 @@ class Resume(Base, UUIDMixin, TimestampMixin):
     )
     raw_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     language: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    total_experience_months: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     def __repr__(self) -> str:

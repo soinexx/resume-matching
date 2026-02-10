@@ -414,19 +414,21 @@ async def analyze_resume(http_request: Request, request: AnalysisRequest, db: As
 
         # Шаг 7: Расчёт опыта работы (опционально, требует структурированных данных)
         experience_analysis = None
+        total_experience_months = 0
         if request.extract_experience:
             logger.info("Расчёт опыта работы...")
             try:
-                # Примечание: расчёт опыта требует структурированных данных опыта
-                # Сейчас возвращаем заглушку, так как у нас нет логики парсинга резюме
+                # Расчитываем общий опыт работы в месяцах
+                total_experience_months = calculate_total_experience(resume_text)
                 experience_analysis = ExperienceAnalysis(
-                    total_months=0,
-                    total_years=0.0,
-                    total_years_formatted="Расчёт опыта требует распаршенных данных резюме",
+                    total_months=total_experience_months,
+                    total_years=round(total_experience_months / 12, 1),
+                    total_years_formatted=format_experience_summary(total_experience_months),
                     entries=[],
                 )
+                logger.info(f"Расчитан опыт работы: {experience_analysis.total_years_formatted}")
             except Exception as e:
-                logger.warning(f"Расчёт опыта не удался: {e}")
+                logger.warning(f"Расчёт опыта не удался: {e}", exc_info=True)
                 # Продолжаем без результатов опыта
 
         # Расчёт времени обработки
@@ -474,6 +476,9 @@ async def analyze_resume(http_request: Request, request: AnalysisRequest, db: As
                 resume_obj.status = ResumeStatus.COMPLETED
                 resume_obj.language = language
                 resume_obj.raw_text = resume_text[:10000]
+                # Сохраняем рассчитанный опыт работы
+                if total_experience_months > 0:
+                    resume_obj.total_experience_months = total_experience_months
                 await db.commit()
 
             logger.info(f"Анализ сохранён в базу данных для resume_id {request.resume_id}")

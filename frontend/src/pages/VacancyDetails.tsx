@@ -84,7 +84,7 @@ const VacancyDetails: React.FC = () => {
         const response = await axios.get(`/api/vacancies/${id}`);
         setVacancy(response.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Не удалось загрузить вакансию');
+        setError(err instanceof Error ? err.message : t('vacancyDetails.failedToLoad'));
       } finally {
         setLoading(false);
       }
@@ -93,16 +93,16 @@ const VacancyDetails: React.FC = () => {
     if (id) {
       fetchVacancy();
     }
-  }, [id]);
+  }, [id, t]);
 
   const handleDelete = async () => {
-    if (!confirm('Вы уверены, что хотите удалить эту вакансию?')) return;
+    if (!confirm(t('vacancyDetails.deleteConfirm'))) return;
 
     try {
       await axios.delete(`/api/vacancies/${id}`);
-      navigate('/recruiter/vacancies');
+      navigate('/jobs');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось удалить вакансию');
+      setError(err instanceof Error ? err.message : t('vacancyDetails.failedToDelete'));
     }
   };
 
@@ -150,7 +150,7 @@ const VacancyDetails: React.FC = () => {
   if (error || !vacancy) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error">{error || 'Вакансия не найдена'}</Alert>
+        <Alert severity="error">{error || t('vacancyDetails.notFound')}</Alert>
       </Container>
     );
   }
@@ -161,7 +161,7 @@ const VacancyDetails: React.FC = () => {
       <Box sx={{ mb: 3 }}>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/recruiter/vacancies')}
+          onClick={() => navigate('/jobs')}
           sx={{ mb: 2 }}
         >
           {t('common.back')}
@@ -197,14 +197,14 @@ const VacancyDetails: React.FC = () => {
               color="primary"
               onClick={handleMatchDialogOpen}
             >
-              Сопоставить с резюме
+              {t('vacancyDetails.matchWithResume')}
             </Button>
             <Button
               startIcon={<EditIcon />}
               variant="outlined"
-              onClick={() => navigate(`/recruiter/vacancies/${vacancy.id}/edit`)}
+              onClick={() => navigate(`/jobs/${vacancy.id}/edit`)}
             >
-              {t('common.edit')}
+              {t('vacancyDetails.editVacancy')}
             </Button>
             <Button
               startIcon={<DeleteIcon />}
@@ -212,7 +212,7 @@ const VacancyDetails: React.FC = () => {
               color="error"
               onClick={handleDelete}
             >
-              {t('common.delete')}
+              {t('vacancyDetails.deleteVacancy')}
             </Button>
           </Stack>
         </Box>
@@ -224,10 +224,10 @@ const VacancyDetails: React.FC = () => {
           <Grid item xs={12} md={8}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                Описание
+                {t('vacancyDetails.description')}
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                {vacancy.description || 'Описание не предоставлено'}
+                {vacancy.description || t('vacancyDetails.noDescription')}
               </Typography>
             </Box>
           </Grid>
@@ -237,23 +237,23 @@ const VacancyDetails: React.FC = () => {
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                  Детали
+                  {t('vacancyDetails.details')}
                 </Typography>
                 <Stack spacing={2}>
                   {vacancy.min_experience_months && (
                     <Box>
                       <Typography variant="caption" color="text.secondary">
-                        Требуемый опыт
+                        {t('vacancyDetails.requiredExperience')}
                       </Typography>
                       <Typography variant="body1">
-                        {Math.floor(vacancy.min_experience_months / 12)}+ лет
+                        {Math.floor(vacancy.min_experience_months / 12)}+ {t('vacancyDetails.years')}
                       </Typography>
                     </Box>
                   )}
                   {(vacancy.salary_min || vacancy.salary_max) && (
                     <Box>
                       <Typography variant="caption" color="text.secondary">
-                        Зарплата
+                        {t('vacancyDetails.salary')}
                       </Typography>
                       <Typography variant="body1">
                         {vacancy.salary_min && vacancy.salary_max
@@ -276,7 +276,7 @@ const VacancyDetails: React.FC = () => {
             <Divider sx={{ my: 3 }} />
             <Box>
               <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                Требуемые навыки
+                {t('vacancyDetails.requiredSkills')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {vacancy.required_skills.map((skill) => (
@@ -302,7 +302,7 @@ const VacancyDetails: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CompareIcon color="primary" />
             <Typography variant="h6" component="span">
-              Выберите резюме для сопоставления
+              {t('vacancyDetails.matchDialog.title')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -311,7 +311,7 @@ const VacancyDetails: React.FC = () => {
           {/* Search Field */}
           <TextField
             fullWidth
-            placeholder="Поиск резюме..."
+            placeholder={t('vacancyDetails.matchDialog.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
@@ -335,7 +335,7 @@ const VacancyDetails: React.FC = () => {
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <WorkIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
               <Typography variant="body1" color="text.secondary">
-                {searchQuery ? 'Резюме не найдены' : 'Нет доступных резюме'}
+                {searchQuery ? t('vacancyDetails.matchDialog.noResumesFound') : t('vacancyDetails.matchDialog.noResumes')}
               </Typography>
             </Box>
           ) : (
@@ -343,13 +343,13 @@ const VacancyDetails: React.FC = () => {
               {filteredResumes.map((resume) => (
                 <ListItem
                   key={resume.id}
-                  button
                   onClick={() => handleResumeSelect(resume.id)}
                   sx={{
                     borderRadius: 1,
                     mb: 1,
                     border: '1px solid',
                     borderColor: 'divider',
+                    cursor: 'pointer',
                     '&:hover': {
                       bgcolor: 'action.hover',
                       borderColor: 'primary.main',
@@ -363,7 +363,7 @@ const VacancyDetails: React.FC = () => {
                   </ListItemAvatar>
                   <ListItemText
                     primary={resume.filename}
-                    secondary={`Загружено: ${new Date(resume.uploaded_at).toLocaleDateString('ru-RU')}`}
+                    secondary={`${t('vacancyDetails.matchDialog.uploaded')}: ${new Date(resume.uploaded_at).toLocaleDateString('ru-RU')}`}
                   />
                   <IconButton edge="end" color="primary">
                     <CompareIcon />
@@ -376,7 +376,7 @@ const VacancyDetails: React.FC = () => {
 
         <DialogActions>
           <Button onClick={handleMatchDialogClose}>
-            Отмена
+            {t('vacancyDetails.matchDialog.cancel')}
           </Button>
         </DialogActions>
       </Dialog>

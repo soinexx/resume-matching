@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Box, Tabs, Tab } from '@mui/material';
+import { Typography, Box, Tabs, Tab, Container } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AnalysisResults from '@components/AnalysisResults';
@@ -38,7 +38,7 @@ const ResultsPage: React.FC = () => {
   };
 
   return (
-    <Box>
+    <Container maxWidth="lg">
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
           {t('results.title')}
@@ -57,7 +57,7 @@ const ResultsPage: React.FC = () => {
 
       {activeTab === 0 && <AnalysisResults resumeId={id} />}
       {activeTab === 1 && <VacancyMatchResults resumeId={id} />}
-    </Box>
+    </Container>
   );
 };
 
